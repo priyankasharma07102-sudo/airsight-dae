@@ -5,56 +5,64 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 
-# =========================================================
+# ============================================================
 # AIRSIGHT | AIR QUALITY & WEATHER ANALYTICS
-# =========================================================
+# Complete single-file Streamlit application
+# ============================================================
+
 st.set_page_config(
-    page_title="AirSight | Intelligence Dashboard",
+    page_title="AirSight | Air Quality Intelligence",
     page_icon="🌿",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
 )
 
-GREEN = "#10B981"
-TEAL = "#2DD4BF"
-BLUE = "#60A5FA"
-AMBER = "#FBBF24"
-RED = "#FB7185"
-INK = "#142D27"
-MUTED = "#647A72"
-PALETTE = [GREEN, BLUE, TEAL, AMBER, RED, "#A78BFA", "#F472B6"]
+# ------------------------- THEME -----------------------------
 
-# ---------------------- PREMIUM THEME ----------------------
+BG = "#F3F7F4"
+WHITE = "#FFFFFF"
+INK = "#18372D"
+MUTED = "#526D62"
+GREEN = "#0DAB78"
+DARK_GREEN = "#123C30"
+MINT = "#B8F2D9"
+BLUE = "#3978D4"
+TEAL = "#14B8A6"
+AMBER = "#E9A23B"
+RED = "#E65C6A"
+PURPLE = "#8B79D9"
+
+PALETTE = [GREEN, BLUE, TEAL, AMBER, RED, PURPLE, "#E879B0"]
+
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
 
 :root {
-    --green: #10B981;
-    --dark: #10251F;
-    --text: #18372D;
-    --muted: #688077;
-    --border: #DCE9E2;
-    --surface: #FFFFFF;
+    --green: #0DAB78;
+    --dark: #123C30;
+    --ink: #18372D;
+    --muted: #526D62;
+    --border: #DFEAE3;
 }
 
 .stApp {
     background: #F3F7F4;
-    color: var(--text);
+    color: #18372D;
     font-family: 'DM Sans', sans-serif;
 }
 [data-testid="stHeader"] {
-    background: rgba(243,247,244,.94);
+    background: rgba(243,247,244,.96);
 }
 .block-container {
     max-width: 1500px;
-    padding-top: 1.4rem;
+    padding-top: 1.5rem;
     padding-bottom: 3rem;
 }
 h1, h2, h3, h4 {
-    color: #18372D;
+    color: #18372D !important;
     font-family: 'Manrope', sans-serif;
-    letter-spacing: -0.5px;
+    letter-spacing: -.4px;
 }
 p, label, .stMarkdown, [data-testid="stCaptionContainer"] {
     color: #526D62;
@@ -62,44 +70,46 @@ p, label, .stMarkdown, [data-testid="stCaptionContainer"] {
 .hero {
     position: relative;
     overflow: hidden;
-    padding: 32px 34px;
+    padding: 34px;
     margin-bottom: 22px;
     border-radius: 24px;
     color: white;
-    background: linear-gradient(120deg, #102D25 0%, #145B45 55%, #13866B 100%);
-    box-shadow: 0 12px 35px rgba(16, 77, 57, .16);
+    background: linear-gradient(120deg, #102D25, #145B45 55%, #119477);
+    box-shadow: 0 12px 35px rgba(16,77,57,.15);
 }
 .hero:after {
     content: "";
     position: absolute;
-    width: 240px;
-    height: 240px;
-    border: 1px solid rgba(255,255,255,.14);
+    width: 230px;
+    height: 230px;
+    right: -60px;
+    top: -110px;
+    border: 1px solid rgba(255,255,255,.15);
     border-radius: 50%;
-    right: -50px;
-    top: -115px;
     box-shadow: 0 0 0 28px rgba(255,255,255,.035),
                 0 0 0 58px rgba(255,255,255,.025);
+    pointer-events: none;
 }
 .hero h1 {
     color: #FFFFFF !important;
-    font-size: 2.6rem;
+    font-size: 2.65rem;
     font-weight: 800;
     margin: 0;
 }
 .hero p {
-    color: #D5F5E8 !important;
-    margin: 6px 0 0 0;
+    color: #D8F5E9 !important;
+    margin: 8px 0 0 0;
     font-size: 1rem;
 }
 .hero-tag {
     display: inline-block;
-    color: #BDF7DF;
-    border: 1px solid rgba(189,247,223,.3);
+    color: #C8F8E4;
+    border: 1px solid rgba(200,248,228,.3);
     background: rgba(255,255,255,.08);
     padding: 5px 11px;
     border-radius: 99px;
-    font-size: .78rem;
+    font-size: .76rem;
+    letter-spacing: 1px;
     margin-bottom: 12px;
 }
 [data-testid="stMetric"] {
@@ -107,18 +117,18 @@ p, label, .stMarkdown, [data-testid="stCaptionContainer"] {
     border: 1px solid #DFEAE3;
     border-radius: 17px;
     padding: 17px 19px;
-    box-shadow: 0 4px 14px rgba(20, 55, 41, .035);
+    box-shadow: 0 4px 14px rgba(20,55,41,.035);
     transition: transform .18s ease, box-shadow .18s ease;
 }
 [data-testid="stMetric"]:hover {
     transform: translateY(-3px);
-    box-shadow: 0 9px 22px rgba(20, 55, 41, .08);
+    box-shadow: 0 9px 22px rgba(20,55,41,.08);
 }
 [data-testid="stMetricLabel"] {
-    color: #688077 !important;
+    color: #526D62 !important;
 }
 [data-testid="stMetricValue"] {
-    color: #173C2E !important;
+    color: #18372D !important;
     font-family: 'Manrope', sans-serif;
     font-weight: 800;
 }
@@ -126,19 +136,18 @@ p, label, .stMarkdown, [data-testid="stCaptionContainer"] {
     font-size: .78rem;
 }
 [data-testid="stTabs"] button {
-    border-radius: 10px;
+    color: #36594B;
     font-weight: 600;
-    color: #426357;
 }
 [data-testid="stTabs"] button[aria-selected="true"] {
     color: #087A54;
 }
 div[data-testid="stPlotlyChart"] {
     background: #FFFFFF;
-    border: 1px solid #E1EBE5;
+    border: 1px solid #DFEAE3;
     border-radius: 17px;
     padding: 8px;
-    box-shadow: 0 4px 16px rgba(20, 55, 41, .025);
+    box-shadow: 0 4px 16px rgba(20,55,41,.025);
 }
 div[data-testid="stDataFrame"] {
     border: 1px solid #DFEAE3;
@@ -154,8 +163,8 @@ div[data-testid="stDataFrame"] {
     border: 0;
 }
 .section-label {
-    color: #14805D;
-    font-size: .75rem;
+    color: #087A54;
+    font-size: .74rem;
     font-weight: 800;
     letter-spacing: 1.7px;
     text-transform: uppercase;
@@ -164,33 +173,46 @@ div[data-testid="stDataFrame"] {
 div[data-testid="stAlert"] {
     border-radius: 12px;
 }
-footer {visibility: hidden;}
+footer {
+    visibility: hidden;
+}
 </style>
 """, unsafe_allow_html=True)
 
 st.markdown("""
 <div class="hero">
-  <div class="hero-tag">● DATA INTELLIGENCE PLATFORM</div>
-  <h1>🌿 AirSight</h1>
-  <p>Air Quality & Weather Analytics · Explore the patterns behind the air we breathe.</p>
+    <div class="hero-tag">● AIR QUALITY INTELLIGENCE PLATFORM</div>
+    <h1>🌿 AirSight</h1>
+    <p>Air Quality & Weather Analytics · Explore the patterns behind the air we breathe.</p>
 </div>
 """, unsafe_allow_html=True)
 
-# ---------------------- DEMO DATA ----------------------
+
+# --------------------- DEMONSTRATION DATA -------------------
+
 @st.cache_data
 def create_demo_data():
+    """Generate clearly labelled synthetic data for exploring the dashboard."""
     rng = np.random.default_rng(42)
+
     places = [
-        ("Delhi", "Delhi"), ("Mumbai", "Maharashtra"),
-        ("Hyderabad", "Telangana"), ("Vijayawada", "Andhra Pradesh"),
-        ("Kolkata", "West Bengal"), ("Bengaluru", "Karnataka"),
-        ("Chennai", "Tamil Nadu"), ("Jaipur", "Rajasthan")
+        ("Delhi", "Delhi"),
+        ("Mumbai", "Maharashtra"),
+        ("Hyderabad", "Telangana"),
+        ("Vijayawada", "Andhra Pradesh"),
+        ("Kolkata", "West Bengal"),
+        ("Bengaluru", "Karnataka"),
+        ("Chennai", "Tamil Nadu"),
+        ("Jaipur", "Rajasthan"),
     ]
+
     dates = pd.date_range("2025-01-01", periods=180, freq="D")
     rows = []
+
     for i, date in enumerate(dates):
+        seasonal = 1 + 0.20 * np.sin(i / 18)
+
         for city, state in places:
-            seasonal = 1 + .22 * np.sin(i / 18)
             rows.append({
                 "Date": date,
                 "City": city,
@@ -199,245 +221,506 @@ def create_demo_data():
                 "PM10": round(max(8, rng.normal(88, 28) * seasonal), 1),
                 "NO2": round(max(2, rng.normal(23, 7)), 1),
                 "SO2": round(max(1, rng.normal(10, 3)), 1),
-                "CO": round(max(.1, rng.normal(.8, .2)), 2),
+                "CO": round(max(0.1, rng.normal(0.8, 0.2)), 2),
                 "O3": round(max(2, rng.normal(32, 10)), 1),
                 "Temperature": round(rng.normal(28, 5), 1),
-                "Humidity": round(np.clip(rng.normal(60, 15), 15, 98), 1)
+                "Humidity": round(np.clip(rng.normal(60, 15), 15, 98), 1),
             })
+
     return pd.DataFrame(rows)
 
-# ---------------------- DATA SOURCE ----------------------
-st.sidebar.markdown("## 🌿 AirSight")
-st.sidebar.caption("AIR QUALITY INTELLIGENCE")
-st.sidebar.divider()
 
-with st.sidebar.expander("📂 Data source (optional)", expanded=False):
-    uploaded = st.file_uploader(
-        "Upload your project CSV",
-        type=["csv"],
-        help="Optional. Without an upload, AirSight opens with synthetic demonstration data."
-    )
-    st.caption("For your final presentation, use your actual dataset.")
+# --------------------- DATA UTILITIES -----------------------
 
-if uploaded is not None:
-    try:
-        df = pd.read_csv(uploaded)
-        data_mode = "Uploaded dataset"
-    except Exception as e:
-        st.error(f"Unable to read the uploaded CSV: {e}")
-        st.stop()
-else:
-    df = create_demo_data()
-    data_mode = "Synthetic demo data"
+def normalise_name(value):
+    """Normalise names for flexible CSV column detection."""
+    return "".join(ch.lower() for ch in str(value) if ch.isalnum())
 
-df.columns = [str(c).strip() for c in df.columns]
-df = df.dropna(how="all").copy()
 
-if df.empty:
-    st.error("This dataset has no usable rows.")
-    st.stop()
+def detect_column(columns, aliases):
+    lookup = {normalise_name(col): col for col in columns}
 
-# Convert columns containing mostly numeric values
-for c in df.columns:
-    if df[c].dtype == "object":
-        cleaned = df[c].astype(str).str.strip()
-        converted = pd.to_numeric(
-            cleaned.str.replace(",", "", regex=False), errors="coerce"
-        )
-        valid_count = cleaned.ne("").sum()
-        if valid_count and converted.notna().sum() / valid_count >= .85:
-            df[c] = converted
-
-def detect(aliases):
-    lookup = {str(c).strip().lower().replace("_", "").replace(" ", ""): c
-              for c in df.columns}
     for alias in aliases:
-        key = alias.lower().replace("_", "").replace(" ", "")
+        key = normalise_name(alias)
         if key in lookup:
             return lookup[key]
+
     return None
 
-date_col = detect(["date", "datetime", "timestamp", "measurement_date"])
-city_col = detect(["city", "city_name", "location", "station", "place"])
-state_col = detect(["state", "state_name", "region"])
-aqi_col = detect(["aqi", "air_quality_index", "india_aqi", "us_aqi"])
-lat_col = detect(["latitude", "lat"])
-lon_col = detect(["longitude", "lon", "lng"])
 
-numeric_cols = df.select_dtypes(include="number").columns.tolist()
-pollutant_cols = [
-    c for c in numeric_cols
-    if any(p in str(c).lower().replace(" ", "").replace("_", "")
-           for p in ["pm2.5", "pm25", "pm10", "no2", "so2", "co", "o3", "aqi"])
-]
-if not pollutant_cols:
-    pollutant_cols = numeric_cols
+def numeric_conversion(frame):
+    """Convert columns to numeric only when most non-empty values are numeric."""
+    frame = frame.copy()
 
-if data_mode == "Synthetic demo data":
-    st.info(
-        "DEMO MODE · Showing generated example data, not live or official "
-        "air-quality observations. Upload your real project CSV when available."
-    )
-else:
-    st.success(f"Data loaded successfully · {len(df):,} records · {len(df.columns)} columns")
+    for col in frame.columns:
+        if frame[col].dtype == "object":
+            cleaned = frame[col].astype(str).str.strip()
+            cleaned = cleaned.replace({"": np.nan, "nan": np.nan, "None": np.nan})
 
-# ---------------------- FILTERS ----------------------
-st.sidebar.markdown("### 🎛️ Dashboard filters")
-view = df.copy()
+            converted = pd.to_numeric(
+                cleaned.str.replace(",", "", regex=False),
+                errors="coerce",
+            )
 
-if state_col:
-    state_options = sorted(view[state_col].dropna().astype(str).unique())
-    selected_states = st.sidebar.multiselect(
-        "State / region", state_options, default=state_options
-    )
-    view = view[view[state_col].astype(str).isin(selected_states)]
+            nonempty = cleaned.notna().sum()
 
-if city_col:
-    city_options = sorted(view[city_col].dropna().astype(str).unique())
-    selected_cities = st.sidebar.multiselect(
-        "City / location", city_options, default=city_options
-    )
-    view = view[view[city_col].astype(str).isin(selected_cities)]
+            if nonempty > 0 and converted.notna().sum() / nonempty >= 0.85:
+                frame[col] = converted
+            else:
+                frame[col] = frame[col].replace({"": np.nan})
 
-if date_col:
-    parsed = pd.to_datetime(view[date_col], errors="coerce")
-    valid = parsed.dropna()
-    if not valid.empty:
-        low, high = valid.min().date(), valid.max().date()
-        date_range = st.sidebar.date_input(
-            "Date range", value=(low, high), min_value=low, max_value=high
-        )
-        if isinstance(date_range, (tuple, list)) and len(date_range) == 2:
-            start = pd.Timestamp(date_range[0])
-            end = pd.Timestamp(date_range[1]) + pd.Timedelta(days=1)
-            view_dates = pd.to_datetime(view[date_col], errors="coerce")
-            view = view[(view_dates >= start) & (view_dates < end)]
+    return frame
 
-if view.empty:
-    st.warning("No records match the filters. Clear a filter or select more locations.")
-    st.stop()
 
-# Recalculate candidates after loading and filtering
-numeric_cols = view.select_dtypes(include="number").columns.tolist()
-pollutant_cols = [
-    c for c in numeric_cols
-    if any(p in str(c).lower().replace(" ", "").replace("_", "")
-           for p in ["pm2.5", "pm25", "pm10", "no2", "so2", "co", "o3", "aqi"])
-]
-if not pollutant_cols:
-    pollutant_cols = numeric_cols
-
-# Consistent Plotly styling
-def polish(fig, height=360):
+def polish(fig, height=390):
+    """Consistent chart theme with readable axes and interactive hover labels."""
     fig.update_layout(
         template="plotly_white",
         height=height,
-        margin=dict(l=18, r=18, t=60, b=18),
-        font=dict(family="DM Sans, sans-serif", color=INK, size=12),
-        title=dict(font=dict(size=16, color=INK), x=0.02, xanchor="left"),
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="#FFFFFF",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02,
-                    xanchor="right", x=1),
-        hoverlabel=dict(bgcolor="#102D25", font_color="white"),
+        autosize=True,
+        margin=dict(l=75, r=30, t=78, b=75),
+        font=dict(
+            family="Arial, sans-serif",
+            size=13,
+            color=INK,
+        ),
+        title=dict(
+            font=dict(size=18, color=DARK_GREEN),
+            x=0.025,
+            xanchor="left",
+        ),
+        paper_bgcolor=WHITE,
+        plot_bgcolor=WHITE,
+        hovermode="closest",
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1,
+            font=dict(size=12, color=INK),
+            bgcolor="rgba(255,255,255,0.9)",
+        ),
+        hoverlabel=dict(
+            bgcolor=DARK_GREEN,
+            bordercolor=GREEN,
+            font=dict(color=WHITE, size=13),
+        ),
     )
-    fig.update_xaxes(showgrid=False, linecolor="#E3ECE6")
-    fig.update_yaxes(gridcolor="#EAF0EC", zeroline=False)
+
+    axis_style = dict(
+        showgrid=True,
+        gridcolor="#E5EDE8",
+        gridwidth=1,
+        zeroline=False,
+        showline=True,
+        linecolor="#B9C9BF",
+        linewidth=1,
+        tickfont=dict(size=12, color="#344E43"),
+        title_font=dict(size=14, color="#203D31"),
+        automargin=True,
+        ticks="outside",
+        tickcolor="#B9C9BF",
+    )
+
+    fig.update_xaxes(**axis_style)
+    fig.update_yaxes(**axis_style)
+
     return fig
 
-def nice_num(x):
-    return "—" if pd.isna(x) else f"{x:,.2f}"
 
-# ---------------------- NAVIGATION ----------------------
+def nice_num(value):
+    if pd.isna(value):
+        return "—"
+    return f"{value:,.2f}"
+
+
+def chart_line(frame, x, y, title, x_title, y_title, show_average=False):
+    """Build a reusable, readable time-series chart."""
+    data = frame[[x, y]].copy()
+    data[x] = pd.to_datetime(data[x], errors="coerce")
+    data[y] = pd.to_numeric(data[y], errors="coerce")
+    data = data.dropna().sort_values(x)
+
+    if data.empty:
+        return None
+
+    data = data.groupby(x, as_index=False)[y].mean()
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(
+        x=data[x],
+        y=data[y],
+        mode="lines+markers",
+        name=y,
+        line=dict(color=GREEN, width=2.5),
+        marker=dict(size=5, color=GREEN),
+        hovertemplate=(
+            "<b>%{x|%d %b %Y}</b><br>"
+            + y + ": %{y:.2f}<extra></extra>"
+        ),
+    ))
+
+    if show_average:
+        data["Moving average"] = data[y].rolling(7, min_periods=1).mean()
+
+        fig.add_trace(go.Scatter(
+            x=data[x],
+            y=data["Moving average"],
+            mode="lines",
+            name="7-day moving average",
+            line=dict(color=BLUE, width=3),
+            hovertemplate=(
+                "<b>%{x|%d %b %Y}</b><br>"
+                "7-day average: %{y:.2f}<extra></extra>"
+            ),
+        ))
+
+    fig.update_layout(
+        title=title,
+        xaxis_title=x_title,
+        yaxis_title=y_title,
+        hovermode="x unified",
+    )
+
+    fig.update_xaxes(tickformat="%b %Y", nticks=7, rangeslider_visible=True)
+    return polish(fig, 440)
+
+
+# --------------------- SIDEBAR / DATA SOURCE ----------------
+
+st.sidebar.markdown("## 🌿 AirSight")
+st.sidebar.caption("AIR QUALITY ANALYTICS")
+st.sidebar.divider()
+
+st.sidebar.markdown("### 📂 Data source")
+
+uploaded = st.sidebar.file_uploader(
+    "Upload your CSV (optional)",
+    type=["csv"],
+    help=(
+        "The dashboard works without an upload. "
+        "Use your real project dataset for final analysis."
+    ),
+)
+
+if uploaded is None:
+    df = create_demo_data()
+    data_mode = "Synthetic demonstration data"
+else:
+    try:
+        df = pd.read_csv(uploaded)
+        data_mode = "Uploaded dataset"
+    except Exception as exc:
+        st.error(f"Unable to read this CSV: {exc}")
+        st.stop()
+
+df.columns = [str(col).strip() for col in df.columns]
+df = df.dropna(how="all").copy()
+
+if df.empty:
+    st.error("The selected dataset contains no usable rows.")
+    st.stop()
+
+df = numeric_conversion(df)
+
+if data_mode == "Synthetic demonstration data":
+    st.info(
+        "DEMO MODE · These are generated example values, not live or official "
+        "air-quality measurements. Upload your real dataset for your final DAE analysis."
+    )
+else:
+    st.success(
+        f"Dataset loaded · {len(df):,} rows · {len(df.columns)} columns"
+    )
+
+# Detect common column names
+date_col = detect_column(
+    df.columns,
+    ["date", "datetime", "timestamp", "measurement_date", "time"],
+)
+city_col = detect_column(
+    df.columns,
+    ["city", "city_name", "location", "station", "place"],
+)
+state_col = detect_column(
+    df.columns,
+    ["state", "state_name", "region"],
+)
+aqi_col = detect_column(
+    df.columns,
+    ["aqi", "air_quality_index", "india_aqi", "us_aqi"],
+)
+lat_col = detect_column(df.columns, ["latitude", "lat"])
+lon_col = detect_column(df.columns, ["longitude", "lon", "lng"])
+
+# --------------------- SIDEBAR FILTERS -----------------------
+
+st.sidebar.divider()
+st.sidebar.markdown("### 🎛️ Explore your data")
+
+view = df.copy()
+
+if state_col:
+    states = sorted(view[state_col].dropna().astype(str).unique())
+    chosen_states = st.sidebar.multiselect(
+        "State / region",
+        states,
+        default=states,
+    )
+
+    if chosen_states:
+        view = view[view[state_col].astype(str).isin(chosen_states)]
+    else:
+        view = view.iloc[0:0]
+
+if city_col and not view.empty:
+    cities = sorted(view[city_col].dropna().astype(str).unique())
+    chosen_cities = st.sidebar.multiselect(
+        "City / location",
+        cities,
+        default=cities,
+    )
+
+    if chosen_cities:
+        view = view[view[city_col].astype(str).isin(chosen_cities)]
+    else:
+        view = view.iloc[0:0]
+
+if date_col and not view.empty:
+    parsed_dates = pd.to_datetime(view[date_col], errors="coerce")
+    valid_dates = parsed_dates.dropna()
+
+    if not valid_dates.empty:
+        earliest = valid_dates.min().date()
+        latest = valid_dates.max().date()
+
+        if earliest < latest:
+            selected_dates = st.sidebar.date_input(
+                "Date range",
+                value=(earliest, latest),
+                min_value=earliest,
+                max_value=latest,
+            )
+
+            if isinstance(selected_dates, (tuple, list)) and len(selected_dates) == 2:
+                start_date = pd.Timestamp(selected_dates[0])
+                end_date = pd.Timestamp(selected_dates[1]) + pd.Timedelta(days=1)
+
+                parsed = pd.to_datetime(view[date_col], errors="coerce")
+                view = view[(parsed >= start_date) & (parsed < end_date)]
+
+if view.empty:
+    st.warning(
+        "No rows match your current filters. Select at least one location "
+        "or clear a filter in the sidebar."
+    )
+    st.stop()
+
+st.sidebar.caption(f"Showing {len(view):,} selected records")
+
+# Identify numeric measures after loading and filtering
+numeric_cols = view.select_dtypes(include="number").columns.tolist()
+
+pollutant_cols = [
+    col for col in numeric_cols
+    if any(token in normalise_name(col) for token in [
+        "pm25", "pm10", "no2", "so2", "co", "o3", "aqi"
+    ])
+]
+
+if not pollutant_cols:
+    pollutant_cols = numeric_cols
+
+# --------------------- NAVIGATION ----------------------------
+
 tabs = st.tabs([
     "✨ Overview",
     "🧪 Pollutant Lab",
     "📍 Location Insights",
     "🗂️ Data Explorer",
-    "🛡️ Data Quality"
+    "🛡️ Data Quality",
 ])
 
-# ---------------------- OVERVIEW ----------------------
+
+# ======================= OVERVIEW ============================
+
 with tabs[0]:
-    st.markdown('<div class="section-label">LIVE VIEW OF SELECTED DATA</div>',
-                unsafe_allow_html=True)
-    st.header("Your air-quality overview")
-    st.caption("Use the sidebar filters to explore different locations and dates.")
+    st.markdown(
+        '<div class="section-label">AIR QUALITY · TRENDS · DISCOVERY</div>',
+        unsafe_allow_html=True,
+    )
+    st.header("Air quality at a glance")
+    st.caption(
+        "Explore measurements, compare locations and discover patterns "
+        "in the currently selected dataset."
+    )
 
     k1, k2, k3, k4 = st.columns(4)
     k1.metric("Total records", f"{len(view):,}")
-    k2.metric("Locations", f"{view[city_col].nunique():,}" if city_col else "N/A")
-    k3.metric("Pollutant measures", f"{len(pollutant_cols):,}")
-    k4.metric("Missing values", f"{int(view.isna().sum().sum()):,}")
+    k2.metric(
+        "Locations",
+        f"{view[city_col].nunique():,}" if city_col else "Not available",
+    )
+    k3.metric("Numeric measures", f"{len(numeric_cols):,}")
+    k4.metric("Missing cells", f"{int(view.isna().sum().sum()):,}")
 
-    if pollutant_cols:
-        default_measure = aqi_col if aqi_col in pollutant_cols else pollutant_cols[0]
-        measure = st.selectbox(
-            "Choose a measure", pollutant_cols,
-            index=pollutant_cols.index(default_measure),
-            key="overview_measure"
+    st.divider()
+
+    if not pollutant_cols:
+        st.warning(
+            "No numeric measurements were detected. Check your CSV column "
+            "names and ensure measurements are stored as numbers."
         )
-        left, right = st.columns([1.55, 1])
+    else:
+        default_measure = (
+            aqi_col if aqi_col in pollutant_cols else pollutant_cols[0]
+        )
 
-        with left:
-            if date_col:
-                temp = view.copy()
-                temp["_date"] = pd.to_datetime(temp[date_col], errors="coerce")
-                trend = temp.dropna(subset=["_date"]).groupby(
-                    temp["_date"].dt.date
-                )[measure].mean().reset_index()
-                trend.columns = ["Date", measure]
-                fig = px.line(
-                    trend, x="Date", y=measure,
-                    title=f"{measure} · Daily trend",
-                    markers=True
+        control1, control2 = st.columns([2, 1])
+
+        with control1:
+            measure = st.selectbox(
+                "🧪 Select a pollutant or numeric measure",
+                pollutant_cols,
+                index=pollutant_cols.index(default_measure),
+                key="overview_measure",
+            )
+
+        with control2:
+            show_average = st.checkbox(
+                "Show 7-day moving average",
+                value=True,
+                key="overview_average",
+            )
+
+        valid_values = pd.to_numeric(view[measure], errors="coerce").dropna()
+
+        s1, s2, s3 = st.columns(3)
+        s1.metric("Average reading", nice_num(valid_values.mean()))
+        s2.metric("Median reading", nice_num(valid_values.median()))
+        s3.metric("Highest reading", nice_num(valid_values.max()))
+
+        st.markdown("### 📈 Measurement trends")
+
+        if date_col:
+            trend_fig = chart_line(
+                view,
+                date_col,
+                measure,
+                f"{measure} · Daily trend",
+                "Date",
+                f"{measure} (dataset units)",
+                show_average=show_average,
+            )
+
+            if trend_fig is not None:
+                st.plotly_chart(
+                    trend_fig,
+                    use_container_width=True,
+                    key="overview_trend",
                 )
-                fig.update_traces(line=dict(color=GREEN, width=3),
-                                  marker=dict(size=5))
-                st.plotly_chart(polish(fig), use_container_width=True)
-            elif city_col:
-                summary = view.groupby(city_col)[measure].mean().reset_index()
-                fig = px.bar(summary, x=city_col, y=measure,
-                             title=f"Average {measure} by location",
-                             color=measure, color_continuous_scale=["#BDEFE0", GREEN])
-                st.plotly_chart(polish(fig), use_container_width=True)
+                st.caption(
+                    "Daily averages are shown where dates are available. "
+                    "The moving average smooths fluctuations; it does not "
+                    "predict future readings."
+                )
             else:
-                st.info("A date or location column is needed for a trend chart.")
+                st.info("No valid date and measurement pairs were found.")
+        elif city_col:
+            location_data = (
+                view.groupby(city_col, as_index=False)[measure]
+                .mean()
+                .dropna()
+                .sort_values(measure)
+            )
 
-        with right:
-            stats = view[measure].describe()
-            st.markdown("#### Statistical snapshot")
-            for label, key in [
-                ("Average", "mean"), ("Median", "50%"),
-                ("Minimum", "min"), ("Maximum", "max")
-            ]:
-                st.metric(label, nice_num(stats.get(key, np.nan)))
-            st.caption("Statistics describe the selected data and its units.")
+            fig = px.bar(
+                location_data,
+                x=measure,
+                y=city_col,
+                orientation="h",
+                title=f"Average {measure} by location",
+                color=measure,
+                color_continuous_scale=["#B8F2D9", GREEN, DARK_GREEN],
+                labels={measure: f"{measure} (dataset units)", city_col: "Location"},
+            )
+            st.plotly_chart(
+                polish(fig, 420),
+                use_container_width=True,
+                key="overview_location",
+            )
+        else:
+            st.info(
+                "A date or location column is needed to display a trend chart."
+            )
 
         if city_col:
-            summary = view.groupby(city_col)[measure].mean().reset_index()
-            summary = summary.sort_values(measure, ascending=False)
-            fig = px.bar(
-                summary, x=city_col, y=measure,
-                title=f"Location comparison · Average {measure}",
-                color=measure, color_continuous_scale=["#BDEFE0", GREEN],
-                hover_data={measure: ":.2f"}
-            )
-            st.plotly_chart(polish(fig, 380), use_container_width=True)
-    else:
-        st.warning("No numeric measures detected. Check the CSV column names and data types.")
+            st.markdown("### 📍 Location comparison")
 
-# ---------------------- POLLUTANT LAB ----------------------
+            comparison = (
+                view.groupby(city_col)[measure]
+                .agg(["mean", "median", "count"])
+                .reset_index()
+                .rename(columns={
+                    "mean": "Average",
+                    "median": "Median",
+                    "count": "Readings",
+                })
+                .dropna(subset=["Average"])
+                .sort_values("Average", ascending=False)
+            )
+
+            if not comparison.empty:
+                fig = px.bar(
+                    comparison,
+                    x=city_col,
+                    y="Average",
+                    color="Average",
+                    color_continuous_scale=["#B8F2D9", GREEN, DARK_GREEN],
+                    hover_data={"Median": ":.2f", "Readings": True},
+                    title=f"Location ranking · Average {measure}",
+                    labels={
+                        city_col: "Location",
+                        "Average": f"Average {measure} (dataset units)",
+                    },
+                )
+                st.plotly_chart(
+                    polish(fig, 410),
+                    use_container_width=True,
+                    key="overview_ranking",
+                )
+
+                with st.expander("View location statistics"):
+                    st.dataframe(
+                        comparison,
+                        use_container_width=True,
+                        hide_index=True,
+                    )
+
+
+# ===================== POLLUTANT LAB ========================
+
 with tabs[1]:
-    st.markdown('<div class="section-label">DISTRIBUTIONS · VARIABILITY · RELATIONSHIPS</div>',
-                unsafe_allow_html=True)
+    st.markdown(
+        '<div class="section-label">DISTRIBUTIONS · VARIABILITY · RELATIONSHIPS</div>',
+        unsafe_allow_html=True,
+    )
     st.header("Pollutant exploration")
+    st.caption(
+        "Explore the distribution, spread and relationships of numeric measurements."
+    )
+
     if not pollutant_cols:
-        st.warning("No numeric pollutant or measure columns are available.")
+        st.warning("No numeric pollutant or measurement columns are available.")
     else:
-        measure = st.selectbox("Select a pollutant / numeric measure",
-                               pollutant_cols, key="lab_measure")
+        measure = st.selectbox(
+            "Select a measurement",
+            pollutant_cols,
+            key="lab_measure",
+        )
         values = pd.to_numeric(view[measure], errors="coerce").dropna()
+
         a, b, c, d = st.columns(4)
         a.metric("Valid readings", f"{len(values):,}")
         b.metric("Mean", nice_num(values.mean()))
@@ -445,56 +728,128 @@ with tabs[1]:
         d.metric("Standard deviation", nice_num(values.std()))
 
         left, right = st.columns(2)
+
         with left:
             fig = px.histogram(
-                view, x=measure, nbins=35, marginal="rug",
+                view,
+                x=measure,
+                nbins=35,
+                marginal="rug",
                 title=f"Distribution of {measure}",
-                color_discrete_sequence=[GREEN]
+                color_discrete_sequence=[GREEN],
+                labels={measure: f"{measure} (dataset units)"},
             )
-            st.plotly_chart(polish(fig), use_container_width=True)
+            st.plotly_chart(
+                polish(fig),
+                use_container_width=True,
+                key="lab_histogram",
+            )
+
         with right:
             fig = px.box(
-                view, y=measure, points="outliers",
-                title=f"Spread and potential outliers",
-                color_discrete_sequence=[TEAL]
+                view,
+                y=measure,
+                points="outliers",
+                title=f"Spread and potential outliers · {measure}",
+                color_discrete_sequence=[TEAL],
+                labels={measure: f"{measure} (dataset units)"},
             )
-            st.plotly_chart(polish(fig), use_container_width=True)
+            st.plotly_chart(
+                polish(fig),
+                use_container_width=True,
+                key="lab_box",
+            )
 
         if len(pollutant_cols) >= 2:
-            st.subheader("Correlation explorer")
-            st.caption("Correlation shows linear association, not causation.")
-            corr = view[pollutant_cols].corr(numeric_only=True)
-            fig = px.imshow(
-                corr, text_auto=".2f", aspect="auto",
-                color_continuous_scale=[
-                    "#EAF5EF", "#80D9B7", "#15966D", "#15513D"
-                ],
-                zmin=-1, zmax=1, title="Pollutant correlation matrix"
+            st.markdown("### 🔗 Correlation explorer")
+            st.caption(
+                "Correlation measures linear association. It does not establish causation."
             )
-            st.plotly_chart(polish(fig, 470), use_container_width=True)
 
-# ---------------------- LOCATION INSIGHTS ----------------------
+            corr = view[pollutant_cols].corr(numeric_only=True)
+
+            fig = px.imshow(
+                corr,
+                text_auto=".2f",
+                aspect="auto",
+                color_continuous_scale=[
+                    "#F5F7F5", "#B8F2D9", GREEN, DARK_GREEN
+                ],
+                zmin=-1,
+                zmax=1,
+                title="Correlation matrix",
+            )
+            fig.update_layout(
+                xaxis_title="Measurement",
+                yaxis_title="Measurement",
+            )
+            st.plotly_chart(
+                polish(fig, 490),
+                use_container_width=True,
+                key="lab_correlation",
+            )
+        else:
+            st.info(
+                "At least two numeric measures are required for a correlation matrix."
+            )
+
+
+# ===================== LOCATION INSIGHTS =====================
+
 with tabs[2]:
-    st.markdown('<div class="section-label">COMPARE PLACES · FIND PATTERNS</div>',
-                unsafe_allow_html=True)
+    st.markdown(
+        '<div class="section-label">COMPARE PLACES · FIND PATTERNS</div>',
+        unsafe_allow_html=True,
+    )
     st.header("Location intelligence")
-    location_col = state_col or city_col
+
+    location_col = city_col or state_col
 
     if location_col and pollutant_cols:
-        measure = st.selectbox("Measure to compare", pollutant_cols, key="location_measure")
-        summary = view.groupby(location_col)[measure].agg(
-            Average="mean", Median="median", Records="count"
-        ).reset_index().sort_values("Average", ascending=False)
+        measure = st.selectbox(
+            "Measure to compare",
+            pollutant_cols,
+            key="location_measure",
+        )
+
+        summary = (
+            view.groupby(location_col)[measure]
+            .agg(["mean", "median", "count"])
+            .reset_index()
+            .rename(columns={
+                "mean": "Average",
+                "median": "Median",
+                "count": "Readings",
+            })
+            .dropna(subset=["Average"])
+            .sort_values("Average", ascending=False)
+        )
 
         fig = px.bar(
-            summary, x=location_col, y="Average",
-            color="Average", color_continuous_scale=["#C5F1E1", GREEN],
-            hover_data=["Median", "Records"],
-            title=f"Average {measure} across {location_col}"
+            summary,
+            x=location_col,
+            y="Average",
+            color="Average",
+            color_continuous_scale=["#B8F2D9", GREEN, DARK_GREEN],
+            hover_data={"Median": ":.2f", "Readings": True},
+            title=f"Average {measure} by {location_col}",
+            labels={
+                location_col: "Location",
+                "Average": f"Average {measure} (dataset units)",
+            },
         )
-        st.plotly_chart(polish(fig, 420), use_container_width=True)
-        st.subheader("Ranked comparison")
-        st.dataframe(summary, use_container_width=True, hide_index=True)
+        st.plotly_chart(
+            polish(fig, 430),
+            use_container_width=True,
+            key="location_comparison",
+        )
+
+        st.markdown("### 🏆 Location rankings")
+        st.dataframe(
+            summary,
+            use_container_width=True,
+            hide_index=True,
+        )
 
         if lat_col and lon_col:
             coords = view[[lat_col, lon_col]].copy()
@@ -502,79 +857,139 @@ with tabs[2]:
             coords[lon_col] = pd.to_numeric(coords[lon_col], errors="coerce")
             coords = coords.dropna()
             coords = coords[
-                coords[lat_col].between(-90, 90) &
-                coords[lon_col].between(-180, 180)
+                coords[lat_col].between(-90, 90)
+                & coords[lon_col].between(-180, 180)
             ]
+
             if not coords.empty:
-                st.subheader("Recorded coordinates")
+                st.markdown("### 🗺️ Recorded coordinates")
                 st.map(coords, latitude=lat_col, longitude=lon_col)
     else:
-        st.info("This section needs a location column and at least one numeric measure.")
+        st.info(
+            "This section needs a recognised city or state column and at least "
+            "one numeric measurement."
+        )
 
-# ---------------------- DATA EXPLORER ----------------------
+
+# ======================= DATA EXPLORER ======================
+
 with tabs[3]:
-    st.markdown('<div class="section-label">SEARCH · INSPECT · EXPORT</div>',
-                unsafe_allow_html=True)
+    st.markdown(
+        '<div class="section-label">SEARCH · INSPECT · EXPORT</div>',
+        unsafe_allow_html=True,
+    )
     st.header("Explore your dataset")
-    search = st.text_input("🔎 Search all columns", placeholder="Search a city, state, or value...")
+
+    search = st.text_input(
+        "🔎 Search across all columns",
+        placeholder="Try a city name, state or value...",
+    )
+
     result = view.copy()
+
     if search.strip():
         mask = result.astype(str).apply(
-            lambda col: col.str.contains(search.strip(), case=False, na=False)
+            lambda col: col.str.contains(
+                search.strip(),
+                case=False,
+                na=False,
+                regex=False,
+            )
         )
         result = result[mask.any(axis=1)]
 
     st.caption(f"Showing {len(result):,} of {len(view):,} selected records")
-    st.dataframe(result, use_container_width=True, hide_index=True, height=430)
-    st.download_button(
-        "⬇️ Download selected records (CSV)",
-        result.to_csv(index=False).encode("utf-8"),
-        file_name="airsight_filtered_data.csv",
-        mime="text/csv",
-        type="primary"
+
+    st.dataframe(
+        result,
+        use_container_width=True,
+        hide_index=True,
+        height=430,
     )
 
-# ---------------------- DATA QUALITY ----------------------
+    st.download_button(
+        "⬇️ Download selected records (CSV)",
+        data=result.to_csv(index=False).encode("utf-8"),
+        file_name="airsight_filtered_data.csv",
+        mime="text/csv",
+        type="primary",
+    )
+
+
+# ======================= DATA QUALITY =======================
+
 with tabs[4]:
-    st.markdown('<div class="section-label">TRANSPARENCY · RELIABILITY · COMPLETENESS</div>',
-                unsafe_allow_html=True)
+    st.markdown(
+        '<div class="section-label">TRANSPARENCY · RELIABILITY · COMPLETENESS</div>',
+        unsafe_allow_html=True,
+    )
     st.header("Data quality centre")
-    total = view.shape[0] * view.shape[1]
+
+    total_cells = view.shape[0] * view.shape[1]
     missing = int(view.isna().sum().sum())
     duplicates = int(view.duplicated().sum())
+    missing_pct = (missing / total_cells * 100) if total_cells else 0
+
     q1, q2, q3, q4 = st.columns(4)
     q1.metric("Rows", f"{len(view):,}")
     q2.metric("Columns", f"{len(view.columns):,}")
-    q3.metric("Missing cells", f"{missing:,}",
-              f"{missing / total * 100:.1f}% of cells" if total else "—")
+    q3.metric("Missing cells", f"{missing:,}", f"{missing_pct:.1f}% of cells")
     q4.metric("Duplicate rows", f"{duplicates:,}")
 
-    missing_df = view.isna().sum().rename("Missing values").reset_index()
+    missing_df = (
+        view.isna().sum()
+        .rename("Missing values")
+        .reset_index()
+    )
     missing_df.columns = ["Column", "Missing values"]
     missing_df = missing_df[missing_df["Missing values"] > 0]
+
     if not missing_df.empty:
         fig = px.bar(
-            missing_df, x="Column", y="Missing values",
-            color="Missing values", color_continuous_scale=["#FDE68A", RED],
-            title="Missing values by column"
+            missing_df,
+            x="Column",
+            y="Missing values",
+            color="Missing values",
+            color_continuous_scale=["#FDE68A", RED],
+            title="Missing values by column",
         )
-        st.plotly_chart(polish(fig), use_container_width=True)
-        st.dataframe(missing_df, use_container_width=True, hide_index=True)
+        st.plotly_chart(
+            polish(fig),
+            use_container_width=True,
+            key="quality_missing",
+        )
+        st.dataframe(
+            missing_df,
+            use_container_width=True,
+            hide_index=True,
+        )
     else:
         st.success("No missing values found in the current selection.")
 
     types = pd.DataFrame({
         "Column": view.columns,
-        "Data type": [str(t) for t in view.dtypes],
-        "Unique values": [view[c].nunique(dropna=True) for c in view.columns]
+        "Data type": [str(dtype) for dtype in view.dtypes],
+        "Unique values": [view[col].nunique(dropna=True) for col in view.columns],
     })
-    st.subheader("Column profile")
-    st.dataframe(types, use_container_width=True, hide_index=True)
 
-# ---------------------- FOOTER ----------------------
+    st.markdown("### Column profile")
+    st.dataframe(
+        types,
+        use_container_width=True,
+        hide_index=True,
+    )
+
+    if duplicates:
+        st.caption(
+            "Duplicate rows are counted for inspection; they are not removed automatically."
+        )
+
+
+# ========================== FOOTER ==========================
+
 st.divider()
 st.caption(
-    "AirSight · Data Analytics & Exploration project · "
-    "Charts are based on the currently selected dataset. "
-    "Demo values are synthetic, not live AQI readings."
+    "🌿 AirSight · Data Analytics & Exploration project · "
+    "Interactive analysis of the selected dataset. "
+    "Synthetic demonstration values are not live air-quality readings."
 )

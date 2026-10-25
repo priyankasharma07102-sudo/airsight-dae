@@ -401,43 +401,22 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 if mode == "LIVE API":
+   
+if mode == "FIXED CSV BACKEND":
     st.info(
-        "Live source connected. Open-Meteo provides modelled air-quality "
-        "estimates for these coordinates, not necessarily official station "
-        "measurements. Check official monitoring sources for regulatory decisions."
+        "Connected to the AirSight backend. "
+        "Dashboard data is loaded from the fixed dataset1.csv."
+    )
+elif mode == "LIVE API":
+    st.info(
+        "Live source connected. Open-Meteo provides modelled estimates."
     )
 elif mode == "DEMO FALLBACK":
     st.warning(
-        "The live API could not be reached. You are viewing synthetic "
-        "demonstration data, not current measured AQI."
+        "Showing synthetic demonstration data, not live measurements."
     )
 else:
-    st.info("CSV mode is active. Confirm the dataset's units and column meanings.")
-
-if errors:
-    with st.expander("Location requests that failed"):
-        st.write("\n".join(errors))
-
-# Date filter
-if df["Date"].notna().any():
-    minimum = df["Date"].dropna().min().date()
-    maximum = df["Date"].dropna().max().date()
-
-    selected_dates = st.sidebar.date_input(
-        "Date range",
-        value=(minimum, maximum),
-        min_value=minimum,
-        max_value=maximum,
-    )
-
-    if isinstance(selected_dates, (tuple, list)) and len(selected_dates) == 2:
-        start = pd.Timestamp(selected_dates[0])
-        end = pd.Timestamp(selected_dates[1]) + pd.Timedelta(days=1)
-        df = df[(df["Date"] >= start) & (df["Date"] < end)]
-
-if df.empty:
-    st.warning("No rows match the selected date range.")
-    st.stop()
+    st.info("CSV data source is active.")
 
 # -------------------- KPI cards --------------------
 

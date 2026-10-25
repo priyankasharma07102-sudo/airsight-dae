@@ -333,6 +333,7 @@ df = df[df["City"].isin(cities)].copy()
 
 mode = "FIXED CSV BACKEND"
 updated = "Loaded from dataset1.csv"
+errors = []
 
 st.sidebar.success("Backend connected")
 st.sidebar.caption(

@@ -246,63 +246,103 @@ st.sidebar.radio(
     horizontal=True,
 )
 
+
+# -------------------- Load fixed dataset from backend --------------------
+
+try:
+    BACKEND_URL = st.secrets.get("AIRSIGHT_BACKEND_URL", "").strip().rstrip("/")
+except Exception:
+    BACKEND_URL = ""
+
+if not BACKEND_URL:
+    st.error(
+        "Backend URL is missing. Configure AIRSIGHT_BACKEND_URL "
+        "in Streamlit Cloud Secrets."
+    )
+    st.stop()
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def get_backend_data(base_url):
+    response = requests.get(
+        f"{base_url}/api/data",
+        timeout=60,
+    )
+    response.raise_for_status()
+
+    payload = response.json()
+
+    if payload.get("status") != "success":
+        raise ValueError(
+            payload.get("detail", "Backend returned an error.")
+        )
+
+    records = payload.get("records", [])
+
+    if not records:
+        raise ValueError("The backend returned no data records.")
+
+    return pd.DataFrame(records), payload
+
+
+if st.sidebar.button(
+    "↻ Reload fixed dataset",
+    use_container_width=True,
+):
+    get_backend_data.clear()
+    st.rerun()
+
+try:
+    with st.spinner("Loading AirSight dataset from backend..."):
+        df, backend_payload = get_backend_data(BACKEND_URL)
+
+except Exception as exc:
+    st.error(
+        "Unable to load the dataset from the AirSight backend. "
+        "Check that the Render service is deployed and working."
+    )
+    st.caption(str(exc))
+    st.stop()
+
+# Let the user filter cities that actually exist in the dataset.
+df.columns = [str(c).strip() for c in df.columns]
+
+if "City" not in df.columns:
+    st.error("The backend data does not contain a City column.")
+    st.stop()
+
+available_cities = sorted(
+    df["City"].dropna().astype(str).unique().tolist()
+)
+
+if not available_cities:
+    st.error("No cities were found in the dataset.")
+    st.stop()
+
 cities = st.sidebar.multiselect(
-    "Monitor locations",
-    list(CITIES.keys()),
-    default=[
-        "Delhi", "Mumbai", "Hyderabad",
-        "Vijayawada", "Bengaluru", "Chennai"
-    ],
+    "Select cities",
+    available_cities,
+    default=available_cities[:min(6, len(available_cities))],
 )
 
 if not cities:
-    cities = ["Vijayawada"]
-    st.sidebar.info("Select a location to continue.")
+    st.warning("Select at least one city to view the dashboard.")
+    st.stop()
 
-uploaded = st.sidebar.file_uploader(
-    "Optional CSV upload", type=["csv"]
+df = df[df["City"].isin(cities)].copy()
+
+mode = "FIXED CSV BACKEND"
+updated = "Loaded from dataset1.csv"
+
+st.sidebar.success("Backend connected")
+st.sidebar.caption(
+    f"{backend_payload.get('record_count', len(df)):,} records available"
 )
 
-if st.sidebar.button("↻ Refresh live data", use_container_width=True):
-    fetch_city.clear()
-    st.rerun()
+# Continue with the existing:
+# # Normalise common CSV column names.
+# section below.
 
-
-# -------------------- Load data --------------------
-
-frames = []
-errors = []
-
-with st.spinner("Loading air-quality data..."):
-    for city in cities:
-        lat, lon = CITIES[city]
-        try:
-            frames.append(fetch_city(city, lat, lon))
-        except Exception as exc:
-            errors.append(f"{city}: {str(exc)[:120]}")
-
-if frames:
-    df = pd.concat(frames, ignore_index=True)
-    mode = "LIVE API"
-    updated = datetime.now().astimezone().strftime("%d %b %Y, %I:%M %p %Z")
-else:
-    df = demo_data()
-    df = df[df["City"].isin(cities)].copy()
-    mode = "DEMO FALLBACK"
-    updated = "Live source unavailable"
-
-if uploaded is not None:
-    try:
-        csv_data = pd.read_csv(uploaded)
-        if csv_data.empty:
-            st.sidebar.error("The CSV contains no rows.")
-        else:
-            df = csv_data.copy()
-            df.columns = [str(c).strip() for c in df.columns]
-            mode = "UPLOADED CSV"
-            updated = "User-provided dataset"
-    except Exception as exc:
-        st.sidebar.error(f"Could not read CSV: {exc}")
 
 # Normalise common CSV column names.
 aliases = {
